@@ -3,7 +3,7 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import  os
+import os
 import akshare as ak
 from torch import Tensor
 from torch import nn
@@ -126,9 +126,9 @@ if __name__ == '__main__':
 
         # pred = pred * (x_max - x_min) + x_min
         # y = y * (x_max - x_min) + x_min
-        line1, = plt.plot(pred.cpu().reshape((-1)))
+        line1, = plt.plot(pred.cpu().detach().numpy().reshape((-1)))
         line1.set_label('pred')
-        line2, = plt.plot(y.cpu().reshape((-1)))
+        line2, = plt.plot(y.cpu().detach().numpy().reshape((-1)))
         line2.set_label('real')
         plt.legend()
         plt.show()
