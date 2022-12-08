@@ -1,10 +1,11 @@
+import os
+import time
 from typing import Tuple
 
+import akshare as ak
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import os
-import akshare as ak
 from torch import Tensor
 from torch import nn
 from torch.nn import LSTM, Linear
@@ -46,6 +47,7 @@ class LSTMModel(nn.Module):
         super(LSTMModel, self).__init__()
 
         self.num_layers = 1
+        # self.transformer = Transformer(d_model=WINDOW_SIZE, nhead=1)
         self.lstm1 = LSTM(input_size=WINDOW_SIZE, hidden_size=128, num_layers=self.num_layers)
         self.lstm2 = LSTM(input_size=128, hidden_size=64, num_layers=self.num_layers)
         self.fc1 = Linear(64, 25)
@@ -62,6 +64,7 @@ class LSTMModel(nn.Module):
         x, _ = self.lstm2(x)
         x = self.fc1(x)
         x = self.fc2(x)
+        # x = self.transformer(x)
         return x
 
 
@@ -85,8 +88,11 @@ def get_data_label_min_max(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np
 
 
 if __name__ == '__main__':
+
+    begin_time = time.time()
+
     # all_data = load_data(TRAIN_CODE)
-    all_data = load_data(TRAIN_CODE)[0:50]
+    all_data = load_data(TRAIN_CODE)
     # all_data = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
     x, y, x_min, x_max = get_data_label_min_max(all_data)
 
@@ -97,14 +103,14 @@ if __name__ == '__main__':
         test_x = x[train_data_len:]
         test_y = y[train_data_len:]
         model = LSTMModel().to(device)
-        criterion = nn.BCELoss().to(device)
+        criterion = nn.MSELoss().to(device)
         optimizer = Adam(model.parameters(), lr=1e-3)
 
         # Train the model
         model.train()
         for i in range(len(train_x)):
-            x = torch.Tensor(train_x[i:i+1]).to(device)
-            y = torch.Tensor(train_y[i:i+1]).to(device)
+            x = torch.Tensor(train_x[i:i + 1]).to(device)
+            y = torch.Tensor(train_y[i:i + 1]).to(device)
 
             output = model(x)
             optimizer.zero_grad()
@@ -130,5 +136,6 @@ if __name__ == '__main__':
         line1.set_label('pred')
         line2, = plt.plot(y.cpu().detach().numpy().reshape((-1)))
         line2.set_label('real')
+        print(device, time.time() - begin_time)
         plt.legend()
         plt.show()
