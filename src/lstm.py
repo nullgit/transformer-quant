@@ -8,19 +8,10 @@ import numpy as np
 import torch
 from torch import Tensor
 from torch import nn
-from torch.nn import LSTM, Linear
+from torch.nn import LSTM, Linear, Transformer
 from torch.optim import Adam
 
-
-def load_data(code: str) -> np.ndarray:
-    # data = np.arange(100)
-    data_path = f'data/ak/stock_zh_{code}.npy'
-    if not os.path.exists(data_path):
-        data = ak.stock_zh_index_daily(symbol=code)['close'].to_numpy()
-        np.save(data_path, data)
-    else:
-        data = np.load(data_path)
-    return data
+from util import load_data
 
 
 device = 'cpu'
@@ -45,11 +36,11 @@ BATCH_SIZE = 32
 class LSTMModel(nn.Module):
     def __init__(self) -> None:
         super(LSTMModel, self).__init__()
-
         self.num_layers = 1
-        # self.transformer = Transformer(d_model=WINDOW_SIZE, nhead=1)
-        self.lstm1 = LSTM(input_size=WINDOW_SIZE, hidden_size=128, num_layers=self.num_layers)
-        self.lstm2 = LSTM(input_size=128, hidden_size=64, num_layers=self.num_layers)
+        self.lstm1 = LSTM(input_size=WINDOW_SIZE, hidden_size=128,
+                          num_layers=self.num_layers, batch_first=True)
+        self.lstm2 = LSTM(input_size=128, hidden_size=64,
+                          num_layers=self.num_layers, batch_first=True)
         self.fc1 = Linear(64, 25)
         self.fc2 = Linear(25, 1)
         # self.model = Sequential(
@@ -64,7 +55,6 @@ class LSTMModel(nn.Module):
         x, _ = self.lstm2(x)
         x = self.fc1(x)
         x = self.fc2(x)
-        # x = self.transformer(x)
         return x
 
 
