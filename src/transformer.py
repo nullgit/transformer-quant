@@ -8,9 +8,8 @@ import numpy as np
 import torch
 from torch import Tensor
 from torch import nn
-from torch.nn import LSTM, Linear, Transformer
+from torch.nn import LSTM, Linear, Transformer, TransformerEncoder, TransformerEncoderLayer
 from torch.optim import Adam
-
 
 def load_data(code: str) -> np.ndarray:
     # data = np.arange(100)
@@ -45,10 +44,16 @@ BATCH_SIZE = 32
 class TransformerModel(nn.Module):
     def __init__(self) -> None:
         super(TransformerModel, self).__init__()
-        self.transformer = Transformer(d_model=1, nhead=1, batch_first=True)
+        # self.transformer = Transformer(d_model=1, nhead=1, batch_first=True)
+        encoder_layer = TransformerEncoderLayer(d_model=1, nhead=1, batch_first=True)
+        self.encoder = TransformerEncoder(encoder_layer, 2)
+        self.linear = Linear(in_features=WINDOW_SIZE, out_features=1)
 
     def forward(self, x, y) -> Tensor:
-        x = self.transformer(x, y)
+        # x = self.transformer(x, y)
+        x = self.encoder(x)
+        x = x.reshape((-1, WINDOW_SIZE))
+        x = self.linear(x)
         return x
     
 
@@ -89,13 +94,13 @@ if __name__ == '__main__':
         test_y = y[train_data_len:]
         model = TransformerModel().to(device)
         criterion = nn.MSELoss().to(device)
-        optimizer = Adam(model.parameters(), lr=1e-3)
+        optimizer = Adam(model.parameters(), lr=1e-2)
 
         # Train the model
         model.train()
         for i in range(len(train_x)):
             x = torch.Tensor(train_x[i:i + 1]).reshape((1, -1, 1)).to(device)
-            y = torch.Tensor(train_y[i:i + 1]).reshape((1, -1, 1)).to(device)
+            y = torch.Tensor(train_y[i:i + 1]).reshape((1, -1)).to(device)
 
             output = model(x, y)
             optimizer.zero_grad()

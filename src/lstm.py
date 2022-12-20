@@ -1,18 +1,15 @@
-import os
 import time
 from typing import Tuple
 
-import akshare as ak
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import Tensor
 from torch import nn
-from torch.nn import LSTM, Linear, Transformer
+from torch.nn import LSTM, Linear
 from torch.optim import Adam
 
-from util import load_data
-
+from util import load_stock_data
 
 device = 'cpu'
 
@@ -35,7 +32,7 @@ BATCH_SIZE = 32
 
 class LSTMModel(nn.Module):
     def __init__(self) -> None:
-        super(LSTMModel, self).__init__()
+        super().__init__()
         self.num_layers = 1
         self.lstm1 = LSTM(input_size=WINDOW_SIZE, hidden_size=128,
                           num_layers=self.num_layers, batch_first=True)
@@ -82,7 +79,7 @@ if __name__ == '__main__':
     begin_time = time.time()
 
     # all_data = load_data(TRAIN_CODE)
-    all_data = load_data(TRAIN_CODE)
+    all_data = load_stock_data(TRAIN_CODE)['close']
     # all_data = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
     x, y, x_min, x_max = get_data_label_min_max(all_data)
 
